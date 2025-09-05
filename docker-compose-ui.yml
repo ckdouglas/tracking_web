@@ -1,0 +1,12 @@
+services:
+  motorsiot-admin:
+    image: ghcr.io/ckdouglas/tracking_web/motorsiot-admin:latest
+    container_name: motorsiot-admin
+    restart: unless-stopped
+    environment:
+      -VIRTUAL_HOST: api.motorsiot.com
+      -VIRTUAL_PORT: 8082
+      -LETSENCRYPT_HOST: api.motorsiot.com
+      -LETSENCRYPT_EMAIL: motorsiotke@gmail.com
+    networks:
+      - web
