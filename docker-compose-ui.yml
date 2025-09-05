@@ -12,4 +12,3 @@ services:
       web: 
         external: true
         name: nginx-proxy_web
-        
