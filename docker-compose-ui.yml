@@ -11,4 +11,3 @@ services:
     networks:
       web: 
         external: true
-        name: nginx-proxy_web
