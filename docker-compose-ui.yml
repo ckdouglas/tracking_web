@@ -9,4 +9,7 @@ services:
       -LETSENCRYPT_HOST: api.motorsiot.com
       -LETSENCRYPT_EMAIL: motorsiotke@gmail.com
     networks:
-      - web
+      web: 
+        external: true
+        name: nginx-proxy_web
+        
