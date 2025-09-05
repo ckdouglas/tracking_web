@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # needed to push to ghcr.io    
+      packages: write   # needed to push to ghcr.io ....
 
     steps:
       - name: Checkout repository
