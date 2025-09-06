@@ -23,7 +23,7 @@
 
 # Use a lightweight web server to serve static files
 # ---- Build Stage ----
-FROM node:22-debian AS build
+FROM node:22
 
 WORKDIR /app
 
