@@ -8,3 +8,6 @@ services:
       -VIRTUAL_PORT: 3000
       -LETSENCRYPT_HOST: admin.motorsiot.com
       -LETSENCRYPT_EMAIL: motorsiotke@gmail.com
+networks:
+  web:
+    external: true
