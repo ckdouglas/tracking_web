@@ -4,7 +4,7 @@ services:
     container_name: motorsiot-admin
     restart: unless-stopped
     environment:
-      -VIRTUAL_HOST: api.motorsiot.com
+      -VIRTUAL_HOST: admin.motorsiot.com
       -VIRTUAL_PORT: 3000
-      -LETSENCRYPT_HOST: api.motorsiot.com
+      -LETSENCRYPT_HOST: admin.motorsiot.com
       -LETSENCRYPT_EMAIL: motorsiotke@gmail.com
