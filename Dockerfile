@@ -21,9 +21,8 @@
 
 
 
-# Use a lightweight web server to serve static files
 # ---- Build Stage ----
-FROM node:22
+FROM node:22 AS build
 
 WORKDIR /app
 
@@ -48,3 +47,4 @@ EXPOSE 80
 
 # Run Nginx
 CMD ["nginx", "-g", "daemon off;"]
+
