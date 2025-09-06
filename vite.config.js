@@ -5,14 +5,18 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig(() => ({
+ 
+ 
   server: {
     port: 3000,
     proxy: {
-      // '/api/socket': 'ws://localhost:8082',
-      // '/api': 'http://localhost:8082',
-      '/api/socket': 'wss://api.motorsiot.com',
-      '/api': 'https://api.motorsiot.com',
+      '/api/socket': 'ws://localhost:8082',
+      '/api': 'http://localhost:8082',
+      // '/api/socket': 'wss://api.motorsiot.com',
+      // '/api': 'https://api.motorsiot.com',
     },
+  
+  
   },
   build: {
     outDir: 'build',
