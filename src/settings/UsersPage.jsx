@@ -61,7 +61,7 @@ const UsersPage = () => {
   }, [timestamp]);
 
   return (
-    <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'settingsUsers']}>
+    <>
       <SearchHeader keyword={searchKeyword} setKeyword={setSearchKeyword} />
       <Table className={classes.table}>
         <TableHead>
@@ -113,7 +113,7 @@ const UsersPage = () => {
         </TableFooter>
       </Table>
       <CollectionFab editPath="/settings/user" />
-    </PageLayout>
+  </>
   );
 };
 
