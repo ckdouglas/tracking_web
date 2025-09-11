@@ -46,6 +46,7 @@ import AccumulatorsPage from './settings/AccumulatorsPage';
 import CommandDevicePage from './settings/CommandDevicePage';
 import CommandGroupPage from './settings/CommandGroupPage';
 import App from './App';
+import DashboardPage from './DashboardPage';
 import ChangeServerPage from './login/ChangeServerPage';
 import DevicesPage from './settings/DevicesPage';
 import ScheduledPage from './reports/ScheduledPage';
@@ -112,11 +113,12 @@ const Navigation = () => {
   }
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/change-server" element={<ChangeServerPage />} />
-      <Route path="/" element={<App />}>
+  <Route path="/login" element={<LoginPage />} />
+  <Route path="/register" element={<RegisterPage />} />
+  <Route path="/reset-password" element={<ResetPasswordPage />} />
+  <Route path="/change-server" element={<ChangeServerPage />} />
+  <Route path="/dashboard" element={<DashboardPage />} />
+  <Route path="/" element={<App />}>
         <Route index element={<MainPage />} />
 
         <Route path="position/:id" element={<PositionPage />} />
