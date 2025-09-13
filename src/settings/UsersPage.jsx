@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Table, TableRow, TableCell, TableBody, Button, Toolbar, Typography, Divider, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Paper, FormControlLabel, Switch
+import {Table, TableRow, TableCell, TableBody, Button, Toolbar, Typography, Divider, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Paper, FormControlLabel, Switch
 } from '@mui/material';
+import { useMediaQuery, useTheme } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import LinkIcon from '@mui/icons-material/Link';
 import AddIcon from '@mui/icons-material/Add';
@@ -21,6 +21,8 @@ import MainMap from '../main/MainMap';
 import { useSelector } from 'react-redux';
 
 const UsersPage = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { classes } = useSettingsStyles();
   const navigate = useNavigate();
   const t = useTranslation();
@@ -66,12 +68,23 @@ const UsersPage = () => {
     key: 'connections',
     title: t('sharedConnections'),
     icon: <LinkIcon fontSize="small" />,
-    handler: (userId) => navigate(`/settings/user/${userId}/connections`),
+  handler: (userId) => setConnectionsUser(userId),
   };
 
   return (
     <div style={{ display: 'flex', height: '100%' }}>
-      <Paper square sx={{ width: 340, minWidth: 340, maxWidth: 340, display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+      <Paper
+        square
+        sx={{
+          width: isMobile ? '100%' : 340,
+          minWidth: isMobile ? '100%' : 340,
+          maxWidth: isMobile ? '100%' : 340,
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box',
+          height: '100%',
+        }}
+      >
         <Toolbar>
           <Typography variant="h6" style={{ flexGrow: 1 }}>{t('userTitle') || 'Users'}</Typography>
           <IconButton size="small" color="primary" onClick={() => setShowAddDialog(true)} sx={{ ml: 1 }}>
@@ -82,6 +95,7 @@ const UsersPage = () => {
         <SearchHeader keyword={searchKeyword} setKeyword={setSearchKeyword} />
         <Divider />
         <div style={{ flexGrow: 1, overflow: 'auto' }}>
+        
           <Table size="small">
             <TableBody>
               {!loading ? items.filter(filterByKeyword(searchKeyword)).map((item) => (
@@ -123,7 +137,11 @@ const UsersPage = () => {
         </div>
       </Paper>
       <div style={{ flex: 1, width: '100%', height: '100%', padding: 0, margin: 0 }}>
-        <MainMap filteredPositions={Object.values(positions)} />
+      {!isMobile && (
+        <div style={{ flex: 1, width: '100%', height: '100%', padding: 0, margin: 0 }}>
+          <MainMap filteredPositions={Object.values(positions)} />
+        </div>
+      )}
       </div>
       {/* User Info Popup */}
       <Dialog open={!!infoUser} onClose={() => setInfoUser(null)} maxWidth="sm">

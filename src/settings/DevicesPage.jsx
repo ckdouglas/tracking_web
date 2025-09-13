@@ -51,6 +51,8 @@ import usePersistedState from '../common/util/usePersistedState';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import AddressValue from '../common/components/AddressValue';
 import { makeStyles } from 'tss-react/mui';
+import { useMediaQuery } from '@mui/material';
+import LinkField from '../common/components/LinkField';
 
 const useSidebarStyles = makeStyles()((theme) => ({
   root: {
@@ -112,6 +114,10 @@ const DevicesPage = () => {
   const [popupDevice, setPopupDevice] = useState(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newDevice, setNewDevice] = useState({ name: '', uniqueId: '' });
+  const [connectionsDevice, setConnectionsDevice] = useState(null);
+  const [editDevice, setEditDevice] = useState(null);
+  const [infoDevice, setInfoDevice] = useState(null);
+  const [deleteDevice, setDeleteDevice] = useState(null);
 
   useEffectAsync(async () => {
     setLoading(true);
@@ -188,7 +194,18 @@ const DevicesPage = () => {
   return (
     <div className={sidebarClasses.root}>
       <div className={sidebarClasses.content}>
-        <Paper square className={sidebarClasses.drawer}>
+        <Paper
+          square
+          sx={{
+            width: useMediaQuery(theme.breakpoints.down('sm')) ? '100%' : theme.dimensions.drawerWidthDesktop,
+            minWidth: useMediaQuery(theme.breakpoints.down('sm')) ? '100%' : theme.dimensions.drawerWidthDesktop,
+            maxWidth: useMediaQuery(theme.breakpoints.down('sm')) ? '100%' : theme.dimensions.drawerWidthDesktop,
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box',
+            height: '100%',
+          }}
+        >
           <Toolbar>
             <Typography variant="h6" className={sidebarClasses.title}>{t('deviceTitle')}</Typography>
             <IconButton size="small" color="primary" onClick={handleExport} sx={{ ml: 1 }} title="Export">
@@ -291,9 +308,6 @@ const DevicesPage = () => {
         </DialogActions>
       </Dialog>
           </Toolbar>
-          <Divider />
-          <Button onClick={handleExport} variant="text" sx={{ m: 2 }}>{t('reportExport')}</Button>
-          <Divider />
           <SearchHeader keyword={searchKeyword} setKeyword={setSearchKeyword} />
           <div style={{ flexGrow: 1, overflow: 'auto' }}>
             <Table size="small">
@@ -302,16 +316,16 @@ const DevicesPage = () => {
                   <TableRow key={item.id} hover>
                     <TableCell>{item.name}</TableCell>
                     <TableCell align="right" style={{ minWidth: 106 }}>
-                      <IconButton size="small" onClick={() => navigate(`/settings/device/${item.id}/connections`)}>
+                      <IconButton size="small" onClick={() => setConnectionsDevice(item)}>
                         <LinkIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" onClick={() => navigate(`/settings/device/${item.id}`)}>
+                      <IconButton size="small" onClick={() => setEditDevice(item)}>
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" onClick={() => setPopupDevice(item)}>
+                      <IconButton size="small" onClick={() => setInfoDevice(item)}>
                         <InfoIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" onClick={() => {/* implement delete logic or dialog here if needed */}}>
+                      <IconButton size="small" onClick={() => setDeleteDevice(item)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </TableCell>
@@ -323,14 +337,217 @@ const DevicesPage = () => {
         </Paper>
         <div className={sidebarClasses.main} style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 0, margin: 0 }}>
           {/* Main content area: only the map is shown here */}
-          <div style={{ flex: 1, width: '100%', height: '100%', padding: 0, margin: 0 }}>
-            <MainMap filteredPositions={Object.values(positions)} />
-          </div>
+          {!useMediaQuery(theme.breakpoints.down('sm')) && (
+            <div style={{ flex: 1, width: '100%', height: '100%', padding: 0, margin: 0 }}>
+              <MainMap filteredPositions={Object.values(positions)} />
+            </div>
+          )}
         </div>
       </div>
+      {/* Device Connections Popup */}
+      <Dialog open={!!connectionsDevice} onClose={() => setConnectionsDevice(null)} maxWidth="sm" fullWidth={false} PaperProps={{ style: { width: '480px', maxWidth: '90vw' } }}>
+        <DialogTitle>
+          Connections
+          {connectionsDevice && (
+            <Typography variant="subtitle1" style={{ marginTop: 8, textAlign: 'left' }}>
+              {connectionsDevice.name}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent dividers>
+          {connectionsDevice && (
+            <>
+              {/* Geofences */}
+              <div style={{ marginBottom: 24 }}>
+                <LinkField
+                  endpointAll="/api/geofences"
+                  endpointLinked={`/api/geofences?deviceId=${connectionsDevice.id}`}
+                  baseId={connectionsDevice.id}
+                  keyBase="deviceId"
+                  keyLink="geofenceId"
+                  label={t('sharedGeofences')}
+                />
+              </div>
+              {/* Notifications */}
+              <div style={{ marginBottom: 24 }}>
+                <LinkField
+                  endpointAll="/api/notifications"
+                  endpointLinked={`/api/notifications?deviceId=${connectionsDevice.id}`}
+                  baseId={connectionsDevice.id}
+                  keyBase="deviceId"
+                  keyLink="notificationId"
+                  label={t('sharedNotifications')}
+                />
+              </div>
+              {/* Drivers */}
+              <div style={{ marginBottom: 24 }}>
+                <LinkField
+                  endpointAll="/api/drivers"
+                  endpointLinked={`/api/drivers?deviceId=${connectionsDevice.id}`}
+                  baseId={connectionsDevice.id}
+                  keyBase="deviceId"
+                  keyLink="driverId"
+                  label={t('sharedDrivers')}
+                />
+              </div>
+              {/* Computed Attributes */}
+              <div style={{ marginBottom: 24 }}>
+                <LinkField
+                  endpointAll="/api/attributes/computed"
+                  endpointLinked={`/api/attributes/computed?deviceId=${connectionsDevice.id}`}
+                  baseId={connectionsDevice.id}
+                  keyBase="deviceId"
+                  keyLink="attributeId"
+                  label={t('sharedComputedAttributes')}
+                />
+              </div>
+              {/* Saved Commands */}
+              <div style={{ marginBottom: 24 }}>
+                <LinkField
+                  endpointAll="/api/commands"
+                  endpointLinked={`/api/commands?deviceId=${connectionsDevice.id}`}
+                  baseId={connectionsDevice.id}
+                  keyBase="deviceId"
+                  keyLink="commandId"
+                  label={t('sharedSavedCommands')}
+                />
+              </div>
+              {/* Maintenance */}
+              <div style={{ marginBottom: 24 }}>
+                <LinkField
+                  endpointAll="/api/maintenance"
+                  endpointLinked={`/api/maintenance?deviceId=${connectionsDevice.id}`}
+                  baseId={connectionsDevice.id}
+                  keyBase="deviceId"
+                  keyLink="maintenanceId"
+                  label={t('sharedMaintenance')}
+                />
+              </div>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConnectionsDevice(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Edit Device Popup */}
+      <Dialog open={!!editDevice} onClose={() => setEditDevice(null)} maxWidth="sm" fullWidth={false} PaperProps={{ style: { width: '480px', maxWidth: '90vw' } }}>
+        <DialogTitle>
+          Edit Device
+          {editDevice && (
+            <Typography variant="subtitle1" style={{ marginTop: 8, textAlign: 'left' }}>
+              {editDevice.name}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent dividers>
+          {editDevice && (
+            <div>
+              <TextField label="Name" value={editDevice.name || ''} onChange={e => setEditDevice({ ...editDevice, name: e.target.value })} fullWidth margin="normal" />
+              <TextField label="Identifier" value={editDevice.uniqueId || ''} onChange={e => setEditDevice({ ...editDevice, uniqueId: e.target.value })} fullWidth margin="normal" />
+              <TextField label="Model" value={editDevice.model || ''} onChange={e => setEditDevice({ ...editDevice, model: e.target.value })} fullWidth margin="normal" />
+              <TextField label="Phone" value={editDevice.phone || ''} onChange={e => setEditDevice({ ...editDevice, phone: e.target.value })} fullWidth margin="normal" />
+              <TextField label="Contact" value={editDevice.contact || ''} onChange={e => setEditDevice({ ...editDevice, contact: e.target.value })} fullWidth margin="normal" />
+              <TextField label="Expiration" value={editDevice.expirationTime || ''} onChange={e => setEditDevice({ ...editDevice, expirationTime: e.target.value })} fullWidth margin="normal" />
+              {/* Group */}
+              <TextField label="Group" value={editDevice.groupId || ''} onChange={e => setEditDevice({ ...editDevice, groupId: e.target.value })} fullWidth margin="normal" />
+              {/* Category */}
+              <TextField label="Category" value={editDevice.category || ''} onChange={e => setEditDevice({ ...editDevice, category: e.target.value })} fullWidth margin="normal" />
+              {/* Calendar */}
+              <TextField label="Calendar" value={editDevice.calendarId || ''} onChange={e => setEditDevice({ ...editDevice, calendarId: e.target.value })} fullWidth margin="normal" />
+              {/* Disabled */}
+              <FormControlLabel control={<Switch checked={!!editDevice.disabled} onChange={e => setEditDevice({ ...editDevice, disabled: e.target.checked })} />} label="Disabled" />
+              {/* Image upload placeholder */}
+              <Button variant="outlined" component="label" sx={{ mb: 2 }}>
+                Upload Image
+                <input type="file" hidden accept="image/*" onChange={e => {
+                  const file = e.target.files[0];
+                  setEditDevice({ ...editDevice, image: file });
+                }} />
+              </Button>
+              {editDevice.image && <Typography variant="body2">Selected: {editDevice.image.name}</Typography>}
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDevice(null)}>Cancel</Button>
+          <Button
+            onClick={async () => {
+              // Save device via API
+              await fetchOrThrow(`/api/devices/${editDevice.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editDevice),
+              });
+              setEditDevice(null);
+              setTimestamp(Date.now()); // refresh list
+            }}
+            variant="contained"
+            disabled={!editDevice?.name || !editDevice?.uniqueId}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Device Info Popup */}
+      <Dialog open={!!infoDevice} onClose={() => setInfoDevice(null)} maxWidth="sm" fullWidth={false} PaperProps={{ style: { width: '480px', maxWidth: '90vw' } }}>
+        <DialogTitle>
+          Device Info
+          {infoDevice && (
+            <Typography variant="subtitle1" style={{ marginTop: 8, textAlign: 'left' }}>
+              {infoDevice.name}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent dividers>
+          {infoDevice && (
+            <div>
+              <Typography variant="body2">Identifier: {infoDevice.uniqueId}</Typography>
+              <Typography variant="body2">Model: {infoDevice.model}</Typography>
+              <Typography variant="body2">Phone: {infoDevice.phone}</Typography>
+              <Typography variant="body2">Contact: {infoDevice.contact}</Typography>
+              <Typography variant="body2">Expiration: {infoDevice.expirationTime}</Typography>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInfoDevice(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Delete Device Confirmation Popup */}
+      <Dialog open={!!deleteDevice} onClose={() => setDeleteDevice(null)} maxWidth="xs" fullWidth={false} PaperProps={{ style: { width: '360px', maxWidth: '90vw' } }}>
+        <DialogTitle>
+          Delete Device
+          {deleteDevice && (
+            <Typography variant="subtitle1" style={{ marginTop: 8, textAlign: 'left' }}>
+              {deleteDevice.name}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2">Are you sure you want to delete this device?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDevice(null)}>Cancel</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={async () => {
+              await fetchOrThrow(`/api/devices/${deleteDevice.id}`, {
+                method: 'DELETE',
+              });
+              setDeleteDevice(null);
+              setTimestamp(Date.now()); // refresh list
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
+
 export default DevicesPage;
 
 
