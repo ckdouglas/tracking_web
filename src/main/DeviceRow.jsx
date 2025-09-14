@@ -1,3 +1,9 @@
+import React, { useState } from 'react';
+import Tabs from '@mui/material/Tabs';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import Tab from '@mui/material/Tab';
+import Box from '@mui/material/Box';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import IconButton from '@mui/material/IconButton';
@@ -7,6 +13,8 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
@@ -17,6 +25,9 @@ import BatteryCharging60Icon from '@mui/icons-material/BatteryCharging60';
 import Battery20Icon from '@mui/icons-material/Battery20';
 import BatteryCharging20Icon from '@mui/icons-material/BatteryCharging20';
 import ErrorIcon from '@mui/icons-material/Error';
+import BuildIcon from '@mui/icons-material/Build';
+import AppsIcon from '@mui/icons-material/Apps';
+import PersonIcon from '@mui/icons-material/Person';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { devicesActions } from '../store';
@@ -25,9 +36,30 @@ import {
 } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
+// Import all PNGs from units-icons
+import defaultIcon from '../resources/images/units-icons/default.png';
+import A_1 from '../resources/images/units-icons/A_1.png';
+import L_11 from '../resources/images/units-icons/L_11.png';
+import L_13 from '../resources/images/units-icons/L_13.png';
+import L_15 from '../resources/images/units-icons/L_15.png';
+import N_1 from '../resources/images/units-icons/N_1.png';
+import tileIcon from '../resources/images/units-icons/tile.png';
+
+const unitIcons = {
+  default: defaultIcon,
+  A_1: A_1,
+  L_11: L_11,
+  L_13: L_13,
+  L_15: L_15,
+  N_1: N_1,
+  tile: tileIcon,
+};
 import { useAdministrator } from '../common/util/permissions';
 import EngineIcon from '../resources/images/data/engine.svg?react';
 import { useAttributePreference } from '../common/util/preferences';
+import DeviceHubIcon from '@mui/icons-material/DeviceHub';
+import MapIcon from '@mui/icons-material/Map';
+import fetchOrThrow from '../common/util/fetchOrThrow';
 
 dayjs.extend(relativeTime);
 
@@ -60,134 +92,210 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 const DeviceRow = ({ devices, index, style }) => {
-  const { classes } = useStyles();
+  const [deviceIconUrl, setDeviceIconUrl] = useState(null);
+  const [openSpanner, setOpenSpanner] = useState(false);
+  const [tabIndex, setTabIndex] = useState(0); // 0: Info, 1: Icon
+  const [selectedIcon, setSelectedIcon] = useState('');
+
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const currentItem = devices[index];
+    async function fetchIcon() {
+      if (currentItem && currentItem.icon) {
+        const url = currentItem.icon.startsWith('http') ? currentItem.icon : `/api/media/${currentItem.uniqueId}/${currentItem.icon}`;
+        try {
+          const res = await fetch(url, { method: 'HEAD' });
+          if (isMounted && res.ok) {
+            setDeviceIconUrl(url);
+          }
+        } catch (error) {
+          console.error('Error fetching device icon:', error);
+        }
+      }
+    }
+    fetchIcon();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [devices, index]);
+
   const dispatch = useDispatch();
   const t = useTranslation();
-
-  const admin = useAdministrator();
+  const { classes } = useStyles();
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
-
   const item = devices[index];
-  const position = useSelector((state) => state.session.positions[item.id]);
+  const position = item?.positions?.[0];
+  const lastSeen = position ? dayjs(position.timestamp).fromNow() : 'N/A';
+  const devicePrimary = useAttributePreference('devicePrimary', 'name') || 'name';
 
-  // Define lastSeen for use in tooltip
-  let lastSeen = '';
-  if (item.lastUpdate) {
-    lastSeen = dayjs(item.lastUpdate).fromNow();
-  } else {
-    lastSeen = 'Never';
-  }
-
-  const devicePrimary = useAttributePreference('devicePrimary', 'name');
-  const deviceSecondary = useAttributePreference('deviceSecondary', '');
-
-  const secondaryText = () => {
-    let status;
-    if (item.status === 'online' || !item.lastUpdate) {
-      status = formatStatus(item.status, t);
-    } else {
-      status = dayjs(item.lastUpdate).fromNow();
-    }
-    return (
-      <>
-        {deviceSecondary && item[deviceSecondary] && `${item[deviceSecondary]} • `}
-        <span className={classes[getStatusColor(item.status)]}>{status}</span>
-      </>
-    );
-  };
-
-return (
-  <ListItemButton
-    selected={selectedDeviceId === item.id}
-    onClick={() => dispatch(devicesActions.selectId(item.id))}
-    style={{
-      minHeight: 40,
-      width: '100%',
-      padding: '6px 12px',
-      margin: 0,
-      borderRadius: 10,
-      transition: 'box-shadow 0.2s',
-      boxShadow: selectedDeviceId === item.id ? '0 2px 8px rgba(25, 118, 210, 0.08)' : 'none',
-      background: selectedDeviceId === item.id ? '#f5faff' : 'white',
-    }}
-    sx={{
-      '&:hover': {
-        boxShadow: '0 2px 12px rgba(25, 118, 210, 0.12)',
-        background: '#f0f7ff',
-      },
-    }}
-  >
-    <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1, overflow: 'hidden' }}>
-      <DirectionsCarIcon sx={{ color: '#1976d2', fontSize: 20, mr: 1 }} />
-      <span style={{ fontWeight: 500, marginRight: 12, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: 120, fontSize: '0.95rem'}}>{item[devicePrimary]}</span>
-    </span>
-    <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <span
-        style={{
-          display: 'inline-block',
-          width: 12,
-          height: 12,
-          borderRadius: '50%',
-          marginRight: 8,
-          backgroundColor: item.status === 'online' ? '#4caf50' : '#f44336',
-          boxShadow: '0 0 4px rgba(0,0,0,0.08)',
+  return (
+    <>
+      <ListItemButton
+        selected={selectedDeviceId === item.id}
+        onClick={e => {
+          if (e.target.closest('.spanner-icon')) return;
+          dispatch(devicesActions.selectId(item.id));
         }}
-      />
-      <Tooltip title={
-        position && position.address
-          ? position.address
-          : position && position.latitude && position.longitude
-            ? `${position.latitude}, ${position.longitude}`
-            : 'No location data'
-      }>
-        <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 4 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={position && position.latitude && position.longitude ? '#1976d2' : '#bdbdbd'}>
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
+        sx={{
+          minHeight: 40,
+          width: '100%',
+          padding: '6px 12px',
+          margin: 0,
+          borderRadius: 2,
+          transition: 'box-shadow 0.2s',
+          boxShadow: selectedDeviceId === item.id ? '0 2px 8px rgba(25, 118, 210, 0.08)' : 'none',
+          background: (theme) => selectedDeviceId === item.id ? theme.palette.action.selected : theme.palette.background.paper,
+          color: (theme) => theme.palette.text.primary,
+          '&:hover': {
+            boxShadow: '0 2px 12px rgba(25, 118, 210, 0.12)',
+            background: (theme) => theme.palette.action.hover,
+          },
+        }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+          {/* Device icon: fetched from API if set, else default */}
+          <img src={deviceIconUrl || unitIcons.default} alt="device icon" style={{ width: 24, height: 24, marginRight: 8, objectFit: 'contain', borderRadius: 4 }} />
+          <span style={{ fontWeight: 500, marginRight: 12, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: 120, fontSize: '0.95rem'}}>{item[devicePrimary]}</span>
         </span>
-      </Tooltip>
-      <Tooltip title={lastSeen}>
-        <AccessTimeIcon sx={{ color: '#888', fontSize: 17, marginLeft: 1 }} />
-      </Tooltip>
-      {position && position.attributes.hasOwnProperty('alarm') && (
-        <Tooltip title={`${t('eventAlarm')}: ${formatAlarm(position.attributes.alarm, t)}`}>
-          <IconButton size="small">
-            <ErrorIcon fontSize="small" className={classes.error} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              marginRight: 8,
+              backgroundColor: item.status === 'online' ? '#4caf50' : '#f44336',
+              boxShadow: '0 0 4px rgba(0,0,0,0.08)',
+            }}
+          />
+          <Tooltip title={
+            position && position.address
+              ? position.address
+              : position && position.latitude && position.longitude
+                ? `${position.latitude}, ${position.longitude}`
+                : 'No location data'
+          }>
+            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 4 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={position && position.latitude && position.longitude ? '#1976d2' : '#bdbdbd'}>
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </span>
+          </Tooltip>
+          <Tooltip title={lastSeen}>
+            <AccessTimeIcon sx={{ color: '#888', fontSize: 20, marginLeft: 1 }} />
+          </Tooltip>
+          <IconButton size="small" className="spanner-icon" onClick={e => { e.stopPropagation(); setOpenSpanner(true); }}>
+            <BuildIcon sx={{ color: '#888', fontSize: 20, marginLeft: 1 }} />
           </IconButton>
-        </Tooltip>
-      )}
-      {position && position.attributes.hasOwnProperty('ignition') && (
-        <Tooltip title={`${t('positionIgnition')}: ${formatBoolean(position.attributes.ignition, t)}`}>
-          <IconButton size="small">
-            {position.attributes.ignition ? (
-              <EngineIcon width={18} height={18} className={classes.success} />
-            ) : (
-              <EngineIcon width={18} height={18} className={classes.neutral} />
+          <Tooltip title={position && position.attributes?.alarm ? `${t('eventAlarm')}: ${formatAlarm(position.attributes.alarm, t)}` : t('eventAlarm') + ': None'}>
+            <IconButton size="small">
+              <ErrorIcon fontSize="small" sx={{ fontSize: 20, color: position && position.attributes?.alarm ? '#d32f2f' : '#bdbdbd' }} />
+            </IconButton>
+          </Tooltip>
+          {position && position.attributes?.ignition && (
+            <Tooltip title={`${t('positionIgnition')}: ${formatBoolean(position.attributes.ignition, t)}`}>
+              <IconButton size="small">
+                {position.attributes.ignition ? (
+                  <EngineIcon width={20} height={20} className={classes.success} />
+                ) : (
+                  <EngineIcon width={20} height={20} className={classes.neutral} />
+                )}
+              </IconButton>
+            </Tooltip>
+          )}
+          {position && position.attributes?.batteryLevel && (
+            <Tooltip title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}>
+              <IconButton size="small">
+                {position.attributes.batteryLevel > 70
+                  ? position.attributes.charge
+                    ? <BatteryChargingFullIcon fontSize="small" className={classes.success} />
+                    : <BatteryFullIcon fontSize="small" className={classes.success} />
+                  : position.attributes.batteryLevel > 30
+                    ? position.attributes.charge
+                      ? <BatteryCharging60Icon fontSize="small" className={classes.warning} />
+                      : <Battery60Icon fontSize="small" className={classes.warning} />
+                    : position.attributes.charge
+                      ? <BatteryCharging20Icon fontSize="small" className={classes.error} />
+                      : <Battery20Icon fontSize="small" className={classes.error} />
+                }
+              </IconButton>
+            </Tooltip>
+          )}
+        </span>
+      </ListItemButton>
+      {/* Device properties dialog (spanner icon) with tabs and icon selection */}
+      {openSpanner && (
+        <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', bgcolor: 'rgba(0,0,0,0.3)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setOpenSpanner(false)}>
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, boxShadow: 6, minWidth: 340, maxWidth: 420, p: 3 }} onClick={e => e.stopPropagation()}>
+            <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)} variant="fullWidth" sx={{ mb: 2 }}>
+              <Tab label={t('Device Info') || 'Device Info'} />
+              <Tab label={t('Select Icon') || 'Select Icon'} />
+            </Tabs>
+            {tabIndex === 0 && (
+              <>
+                <Typography variant="h6" sx={{ mb: 2 }}>{item[devicePrimary]}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <img src={deviceIconUrl || unitIcons.default} alt="device icon" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 6 }} />
+                  <Typography variant="body2">ID: {item.id}</Typography>
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2">Last seen: {lastSeen}</Typography>
+                  <Typography variant="body2">Status: {item.status}</Typography>
+                  {/* Add more device details here as needed */}
+                </Box>
+              </>
             )}
-          </IconButton>
-        </Tooltip>
+            {tabIndex === 1 && (
+              <>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('Choose an icon') || 'Choose an icon'}</Typography>
+                <Grid container spacing={2} sx={{ maxHeight: 180, overflowY: 'auto', mb: 2 }}>
+                  {Object.entries(unitIcons).map(([key, icon]) => (
+                    <Grid item xs={3} key={key}>
+                      <IconButton
+                        sx={{ border: selectedIcon === key ? '2px solid #1976d2' : '2px solid transparent', borderRadius: 2, p: 0.5 }}
+                        onClick={() => setSelectedIcon(key)}
+                      >
+                        <img src={icon} alt={key} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4 }} />
+                      </IconButton>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    disabled={!selectedIcon || selectedIcon === (item.icon || 'default')}
+                    onClick={async () => {
+                      try {
+                        // Upload selected icon as device image
+                        const iconFile = await fetch(unitIcons[selectedIcon]).then(r => r.blob());
+                        const formData = new FormData();
+                        formData.append('image', iconFile, `${selectedIcon}.png`);
+                        const url = `/api/media/${item.uniqueId}/upload`;
+                        await fetchOrThrow(url, {
+                          method: 'POST',
+                          body: formData,
+                        });
+                        setDeviceIconUrl(unitIcons[selectedIcon]);
+                        setOpenSpanner(false);
+                      } catch (err) {
+                        alert('Failed to upload icon');
+                      }
+                    }}
+                  >{t('Save Icon') || 'Save Icon'}</Button>
+                </Box>
+              </>
+            )}
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button variant="outlined" onClick={() => setOpenSpanner(false)}>{t('Close') || 'Close'}</Button>
+            </Box>
+          </Box>
+        </Box>
       )}
-      {position && position.attributes.hasOwnProperty('batteryLevel') && (
-        <Tooltip title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}>
-          <IconButton size="small">
-            {position.attributes.batteryLevel > 70
-              ? position.attributes.charge
-                ? <BatteryChargingFullIcon fontSize="small" className={classes.success} />
-                : <BatteryFullIcon fontSize="small" className={classes.success} />
-              : position.attributes.batteryLevel > 30
-                ? position.attributes.charge
-                  ? <BatteryCharging60Icon fontSize="small" className={classes.warning} />
-                  : <Battery60Icon fontSize="small" className={classes.warning} />
-                : position.attributes.charge
-                  ? <BatteryCharging20Icon fontSize="small" className={classes.error} />
-                  : <Battery20Icon fontSize="small" className={classes.error} />
-            }
-          </IconButton>
-        </Tooltip>
-      )}
-    </span>
-  </ListItemButton>
-);
+    </>
+  );
 };
 
 export default DeviceRow;

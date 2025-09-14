@@ -56,7 +56,7 @@ const useStyles = makeStyles()((theme, { miniVariant }) => ({
     alignItems: 'stretch',
     display: 'flex',
     flexDirection: 'column',
-    overflowY: 'auto',
+    // Removed overflowY: 'auto' to prevent double scroll
   },
 }));
 

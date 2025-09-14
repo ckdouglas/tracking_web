@@ -99,6 +99,7 @@ const LoginPage = () => {
         const user = await response.json();
         generateLoginToken();
         dispatch(sessionActions.updateUser(user));
+        localStorage.setItem('user', JSON.stringify(user));
         const target = window.sessionStorage.getItem('postLogin') || '/';
         window.sessionStorage.removeItem('postLogin');
         navigate(target, { replace: true });
@@ -116,8 +117,9 @@ const LoginPage = () => {
   const handleTokenLogin = useCatch(async (token) => {
     const response = await fetchOrThrow(`/api/session?token=${encodeURIComponent(token)}`);
     const user = await response.json();
-    dispatch(sessionActions.updateUser(user));
-    navigate('/');
+  dispatch(sessionActions.updateUser(user));
+  localStorage.setItem('user', JSON.stringify(user));
+  navigate('/');
   });
 
   const handleOpenIdLogin = () => {
