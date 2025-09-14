@@ -115,25 +115,25 @@ const DashboardPage = () => {
           <Grid container spacing={2}>
             <Grid item xs={12} md={3}>
               <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Connection State</Typography>
+                <Typography variant="subtitle1" sx={{ color: (theme) => theme.palette.text.primary }}>Connection State</Typography>
                 <PieChart data={connectionStateData} />
               </Paper>
             </Grid>
             <Grid item xs={12} md={3}>
               <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Health Check Status</Typography>
+                <Typography variant="subtitle1" sx={{ color: (theme) => theme.palette.text.primary }}>Health Check Status</Typography>
                 <PieChart data={healthCheckData} />
               </Paper>
             </Grid>
             <Grid item xs={12} md={8}>
               <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Top Units by Mileage</Typography>
+                <Typography variant="subtitle1" sx={{ color: (theme) => theme.palette.text.primary }}>Top Units by Mileage</Typography>
                 <BarChart data={topMileage} />
               </Paper>
             </Grid>
             <Grid item xs={12} md={12}>
               <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Mileage Over Time</Typography>
+                <Typography variant="subtitle1" sx={{ color: (theme) => theme.palette.text.primary }}>Mileage Over Time</Typography>
                 <LineChart data={mileageOverTime} />
               </Paper>
             </Grid>
@@ -142,7 +142,7 @@ const DashboardPage = () => {
               <Card sx={{ height: '100%', boxShadow: 3, borderRadius: 2, p: 2 }}>
                 <CardContent sx={{ p: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, flexGrow: 1 }}>Motion state</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500, flexGrow: 1, color: (theme) => theme.palette.text.primary }}>Motion state</Typography>
                     <Typography variant="caption" sx={{ color: '#43a047', fontWeight: 500, mr: 2 }}>ONLINE DATA</Typography>
                     <Box component="span" sx={{ ml: 1 }}>
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>ⓘ</Typography>

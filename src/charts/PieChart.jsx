@@ -1,5 +1,5 @@
 import { Pie } from 'react-chartjs-2';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import {
   Chart,
   ArcElement,
@@ -14,6 +14,8 @@ Chart.register(
 );
 
 const PieChart = ({ data }) => {
+  const theme = useTheme();
+  const legendColor = theme.palette.mode === 'dark' ? '#fff' : '#222';
   const chartData = {
     labels: data.map(d => d.label),
     datasets: [{
@@ -36,6 +38,7 @@ const PieChart = ({ data }) => {
             weight: '400',
           },
           usePointStyle: false,
+          color: legendColor,
           generateLabels: (chart) => {
             const { data: chartData } = chart.data.datasets[0];
             return chart.data.labels.map((label, i) => {
