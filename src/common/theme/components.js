@@ -46,4 +46,14 @@ export default {
       }),
     },
   },
+  MuiTypography: {
+    styleOverrides: {
+      h6: ({ theme }) => ({
+        color: theme.palette.text.primary,
+      }),
+      subtitle1: ({ theme }) => ({
+        color: theme.palette.text.primary,
+      }),
+    },
+  },
 };

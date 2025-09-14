@@ -13,12 +13,8 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 import Typography from '@mui/material/Typography';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
@@ -97,6 +93,10 @@ const useStyles = makeStyles()((theme) => ({
 
 const DeviceRow = ({ devices, index, style }) => {
   const [deviceIconUrl, setDeviceIconUrl] = useState(null);
+  const [openSpanner, setOpenSpanner] = useState(false);
+  const [tabIndex, setTabIndex] = useState(0); // 0: Info, 1: Icon
+  const [selectedIcon, setSelectedIcon] = useState('');
+
 
   React.useEffect(() => {
     let isMounted = true;
@@ -108,132 +108,55 @@ const DeviceRow = ({ devices, index, style }) => {
           const res = await fetch(url, { method: 'HEAD' });
           if (isMounted && res.ok) {
             setDeviceIconUrl(url);
-          } else if (isMounted) {
-            setDeviceIconUrl(unitIcons.default);
           }
-        } catch {
-          if (isMounted) setDeviceIconUrl(unitIcons.default);
+        } catch (error) {
+          console.error('Error fetching device icon:', error);
         }
-      } else {
-        if (isMounted) setDeviceIconUrl(unitIcons.default);
       }
     }
     fetchIcon();
-    return () => { isMounted = false; };
+
+    return () => {
+      isMounted = false;
+    };
   }, [devices, index]);
-  const { classes } = useStyles();
+
   const dispatch = useDispatch();
   const t = useTranslation();
-
-  const admin = useAdministrator();
+  const { classes } = useStyles();
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
-
   const item = devices[index];
-  const position = useSelector((state) => state.session.positions[item.id]);
-
-  // Define lastSeen for use in tooltip
-  let lastSeen = '';
-  if (item.lastUpdate) {
-    lastSeen = dayjs(item.lastUpdate).fromNow();
-  } else {
-    lastSeen = 'Never';
-  }
-
-  const devicePrimary = useAttributePreference('devicePrimary', 'name');
-  const deviceSecondary = useAttributePreference('deviceSecondary', '');
-
-  const secondaryText = () => {
-    let status;
-    if (item.status === 'online' || !item.lastUpdate) {
-      status = formatStatus(item.status, t);
-    } else {
-      status = dayjs(item.lastUpdate).fromNow();
-    }
-    return (
-      <>
-        {deviceSecondary && item[deviceSecondary] && `${item[deviceSecondary]} • `}
-        <span className={classes[getStatusColor(item.status)]}>{status}</span>
-      </>
-    );
-  };
-
-  const [openSpanner, setOpenSpanner] = React.useState(false);
-  const [tabIndex, setTabIndex] = useState(2); // Default to 'Icon' tab
-  const [rotateIcon, setRotateIcon] = useState(false);
-  const [iconLibraryOpen, setIconLibraryOpen] = useState(false);
-  const iconOptions = [
-    { name: 'Car', icon: <DirectionsCarIcon sx={{ fontSize: 32 }} /> },
-    { name: 'Bus', icon: <DeviceHubIcon sx={{ fontSize: 32 }} /> },
-    { name: 'Person', icon: <PersonIcon sx={{ fontSize: 32 }} /> },
-    { name: 'Map', icon: <MapIcon sx={{ fontSize: 32 }} /> },
-    { name: 'Build', icon: <BuildIcon sx={{ fontSize: 32 }} /> },
-    // Add more icons as needed
-  ];
-  const [selectedIcon, setSelectedIcon] = useState(null);
-  // Ensure selectedIcon is set to current device icon when dialog opens
-  React.useEffect(() => {
-    if (openSpanner) {
-      setSelectedIcon(item.icon || 'Car');
-    }
-  }, [openSpanner, item.icon]);
-  const [timestamp, setTimestamp] = useState(Date.now());
-
-  const handleSaveIcon = async () => {
-    // Save selected icon to backend for this device using the image API
-    if (selectedIcon) {
-      // Get the image URL from unitIcons
-      const imageUrl = unitIcons[selectedIcon];
-      // Fetch the image as a blob
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      // Send the blob directly as the request body
-      await fetchOrThrow(`/api/devices/${item.id}/image`, {
-        method: 'POST',
-        body: blob,
-      });
-      // Refetch device data to update icon property
-      try {
-        const deviceRes = await fetchOrThrow(`/api/devices/${item.id}`);
-        const updatedDevice = await deviceRes.json();
-        // Optionally, update the device in Redux if needed
-        // dispatch(devicesActions.update(updatedDevice));
-      } catch (e) {
-        // ignore fetch error
-      }
-      setOpenSpanner(false);
-      setTimestamp(Date.now()); // refresh device list if needed
-    }
-  };
+  const position = item?.positions?.[0];
+  const lastSeen = position ? dayjs(position.timestamp).fromNow() : 'N/A';
+  const devicePrimary = useAttributePreference('devicePrimary', 'name') || 'name';
 
   return (
     <>
       <ListItemButton
         selected={selectedDeviceId === item.id}
         onClick={e => {
-          // Prevent row selection if spanner icon is clicked
           if (e.target.closest('.spanner-icon')) return;
           dispatch(devicesActions.selectId(item.id));
         }}
-        style={{
+        sx={{
           minHeight: 40,
           width: '100%',
           padding: '6px 12px',
           margin: 0,
-          borderRadius: 10,
+          borderRadius: 2,
           transition: 'box-shadow 0.2s',
           boxShadow: selectedDeviceId === item.id ? '0 2px 8px rgba(25, 118, 210, 0.08)' : 'none',
-          background: selectedDeviceId === item.id ? '#f5faff' : 'white',
-        }}
-        sx={{
+          background: (theme) => selectedDeviceId === item.id ? theme.palette.action.selected : theme.palette.background.paper,
+          color: (theme) => theme.palette.text.primary,
           '&:hover': {
             boxShadow: '0 2px 12px rgba(25, 118, 210, 0.12)',
-            background: '#f0f7ff',
+            background: (theme) => theme.palette.action.hover,
           },
         }}
       >
         <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1, overflow: 'hidden' }}>
           {/* Device icon: fetched from API if set, else default */}
-          <img src={deviceIconUrl} alt="device icon" style={{ width: 24, height: 24, marginRight: 8, objectFit: 'contain', borderRadius: 4 }} />
+          <img src={deviceIconUrl || unitIcons.default} alt="device icon" style={{ width: 24, height: 24, marginRight: 8, objectFit: 'contain', borderRadius: 4 }} />
           <span style={{ fontWeight: 500, marginRight: 12, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: 120, fontSize: '0.95rem'}}>{item[devicePrimary]}</span>
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -267,12 +190,12 @@ const DeviceRow = ({ devices, index, style }) => {
           <IconButton size="small" className="spanner-icon" onClick={e => { e.stopPropagation(); setOpenSpanner(true); }}>
             <BuildIcon sx={{ color: '#888', fontSize: 20, marginLeft: 1 }} />
           </IconButton>
-          <Tooltip title={position && position.attributes.hasOwnProperty('alarm') ? `${t('eventAlarm')}: ${formatAlarm(position.attributes.alarm, t)}` : t('eventAlarm') + ': None'}>
+          <Tooltip title={position && position.attributes?.alarm ? `${t('eventAlarm')}: ${formatAlarm(position.attributes.alarm, t)}` : t('eventAlarm') + ': None'}>
             <IconButton size="small">
-              <ErrorIcon fontSize="small" sx={{ fontSize: 20, color: position && position.attributes.hasOwnProperty('alarm') ? '#d32f2f' : '#bdbdbd' }} />
+              <ErrorIcon fontSize="small" sx={{ fontSize: 20, color: position && position.attributes?.alarm ? '#d32f2f' : '#bdbdbd' }} />
             </IconButton>
           </Tooltip>
-          {position && position.attributes.hasOwnProperty('ignition') && (
+          {position && position.attributes?.ignition && (
             <Tooltip title={`${t('positionIgnition')}: ${formatBoolean(position.attributes.ignition, t)}`}>
               <IconButton size="small">
                 {position.attributes.ignition ? (
@@ -283,7 +206,7 @@ const DeviceRow = ({ devices, index, style }) => {
               </IconButton>
             </Tooltip>
           )}
-          {position && position.attributes.hasOwnProperty('batteryLevel') && (
+          {position && position.attributes?.batteryLevel && (
             <Tooltip title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}>
               <IconButton size="small">
                 {position.attributes.batteryLevel > 70
@@ -303,72 +226,74 @@ const DeviceRow = ({ devices, index, style }) => {
           )}
         </span>
       </ListItemButton>
-      <Dialog open={openSpanner} onClose={() => setOpenSpanner(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Unit properties – {item.name || item[devicePrimary]}</DialogTitle>
-        <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tab label="General" />
-          <Tab label="Access" />
-          <Tab label="Icon" />
-          <Tab label="Advanced" />
-          <Tab label="Sensors" />
-          <Tab label="Custom fields" />
-          <Tab label="Unit groups" />
-          <Tab label="Commands" />
-          <Tab label="Eco driving" />
-          <Tab label="Profile" />
-          <Tab label="Trip detector" />
-          <Tab label="Service intervals" />
-          <Tab label="Health check" />
-        </Tabs>
-        <DialogContent dividers sx={{ minHeight: 320 }}>
-          {tabIndex === 2 && (
-            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 3, alignItems: 'flex-start', mt: 2 }}>
-              <Box sx={{ width: 120, height: 120, border: '1px solid #eee', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#fafafa', mr: 2 }}>
-                {/* Show selected icon, fallback to default icon */}
-                <img
-                  src={unitIcons[selectedIcon] || unitIcons['default']}
-                  alt={selectedIcon || 'default'}
-                  style={{ width: 100, height: 100, objectFit: 'contain', transform: rotateIcon ? 'rotate(90deg)' : 'none' }}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Button variant="outlined" startIcon={<AppsIcon />} sx={{ mb: 2 }} disabled>Icon library</Button>
-                <FormControlLabel
-                  control={<Checkbox checked={rotateIcon} onChange={e => setRotateIcon(e.target.checked)} />}
-                  label="Rotate icon"
-                />
-                {/* Scrollable icon grid */}
-                <Box sx={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: 1, p: 1, mt: 2, bgcolor: '#fafafa' }}>
-                  <Grid container spacing={1}>
-                    {Object.entries(unitIcons).map(([key, src]) => (
-                      <Grid item key={key} xs={2} sm={1} md={1} lg={1} xl={1}>
-                        <IconButton
-                          onClick={() => setSelectedIcon(key)}
-                          sx={{ border: selectedIcon === key ? '2px solid #1976d2' : '2px solid transparent', borderRadius: 2, p: 0.5 }}
-                        >
-                          <img src={src} alt={key} style={{ width: 40, height: 40, objectFit: 'contain' }} />
-                        </IconButton>
-                      </Grid>
-                    ))}
-                  </Grid>
+      {/* Device properties dialog (spanner icon) with tabs and icon selection */}
+      {openSpanner && (
+        <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', bgcolor: 'rgba(0,0,0,0.3)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setOpenSpanner(false)}>
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, boxShadow: 6, minWidth: 340, maxWidth: 420, p: 3 }} onClick={e => e.stopPropagation()}>
+            <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)} variant="fullWidth" sx={{ mb: 2 }}>
+              <Tab label={t('Device Info') || 'Device Info'} />
+              <Tab label={t('Select Icon') || 'Select Icon'} />
+            </Tabs>
+            {tabIndex === 0 && (
+              <>
+                <Typography variant="h6" sx={{ mb: 2 }}>{item[devicePrimary]}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <img src={deviceIconUrl || unitIcons.default} alt="device icon" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 6 }} />
+                  <Typography variant="body2">ID: {item.id}</Typography>
                 </Box>
-                {selectedIcon && (
-                  <Typography variant="body2" sx={{ mt: 2 }}>Selected Icon: {selectedIcon}</Typography>
-                )}
-              </Box>
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2">Last seen: {lastSeen}</Typography>
+                  <Typography variant="body2">Status: {item.status}</Typography>
+                  {/* Add more device details here as needed */}
+                </Box>
+              </>
+            )}
+            {tabIndex === 1 && (
+              <>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('Choose an icon') || 'Choose an icon'}</Typography>
+                <Grid container spacing={2} sx={{ maxHeight: 180, overflowY: 'auto', mb: 2 }}>
+                  {Object.entries(unitIcons).map(([key, icon]) => (
+                    <Grid item xs={3} key={key}>
+                      <IconButton
+                        sx={{ border: selectedIcon === key ? '2px solid #1976d2' : '2px solid transparent', borderRadius: 2, p: 0.5 }}
+                        onClick={() => setSelectedIcon(key)}
+                      >
+                        <img src={icon} alt={key} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4 }} />
+                      </IconButton>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    disabled={!selectedIcon || selectedIcon === (item.icon || 'default')}
+                    onClick={async () => {
+                      try {
+                        // Upload selected icon as device image
+                        const iconFile = await fetch(unitIcons[selectedIcon]).then(r => r.blob());
+                        const formData = new FormData();
+                        formData.append('image', iconFile, `${selectedIcon}.png`);
+                        const url = `/api/media/${item.uniqueId}/upload`;
+                        await fetchOrThrow(url, {
+                          method: 'POST',
+                          body: formData,
+                        });
+                        setDeviceIconUrl(unitIcons[selectedIcon]);
+                        setOpenSpanner(false);
+                      } catch (err) {
+                        alert('Failed to upload icon');
+                      }
+                    }}
+                  >{t('Save Icon') || 'Save Icon'}</Button>
+                </Box>
+              </>
+            )}
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button variant="outlined" onClick={() => setOpenSpanner(false)}>{t('Close') || 'Close'}</Button>
             </Box>
-          )}
-          {tabIndex !== 2 && (
-            <Box sx={{ mt: 2, color: '#aaa', textAlign: 'center' }}>
-              <Typography variant="body2">This section is under construction.</Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenSpanner(false)}>Cancel</Button>
-          <Button onClick={handleSaveIcon} disabled={!selectedIcon} variant="contained" color="primary">OK</Button>
-        </DialogActions>
-      </Dialog>
+          </Box>
+        </Box>
+      )}
     </>
   );
 };

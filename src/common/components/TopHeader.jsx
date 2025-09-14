@@ -101,7 +101,7 @@ const TopHeader = () => {
   };
 
   return (
-  <AppBar position="static" color="default" elevation={0} sx={{ background: '#fff', borderBottom: '1px solid #ccc' }}>
+  <AppBar position="static" color="default" elevation={0} sx={{ background: (theme) => theme.palette.background.default, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
     <Toolbar sx={{ minHeight: 32 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
         {/* Logo on far left */}
@@ -111,12 +111,12 @@ const TopHeader = () => {
         {/* Navigation buttons (desktop only) */}
         {!isMobile && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button color={currentSelection() === 'dashboard' ? 'primary' : 'inherit'} startIcon={<DashboardIcon />} onClick={() => navigate('/dashboard')} sx={{ textTransform: 'lowercase' }}>dashboard</Button>
-            <Button color={currentSelection() === 'map' ? 'primary' : 'inherit'} startIcon={<Badge color="error" variant="dot" overlap="circular" invisible={socket !== false}><MapIcon /></Badge>} onClick={() => handleSelection('map')} sx={{ textTransform: 'lowercase' }}>tracking</Button>
-            {!disableReports && (<Button color={currentSelection() === 'reports' ? 'primary' : 'inherit'} startIcon={<DescriptionIcon />} onClick={() => handleSelection('reports')} sx={{ textTransform: 'lowercase' }}>{t('reportTitle')}</Button>)}
-            <Button color={location.pathname.startsWith('/geofences') ? 'primary' : 'inherit'} startIcon={<PlaceIcon />} onClick={() => navigate('/geofences')} sx={{ textTransform: 'lowercase' }}>geofences</Button>
-            <Button color={location.pathname.startsWith('/settings/devices') ? 'primary' : 'inherit'} startIcon={<DeviceHubIcon />} onClick={() => navigate('/settings/devices')} sx={{ textTransform: 'lowercase' }}>units</Button>
-            <Button color={location.pathname.startsWith('/settings/users') ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={() => navigate('/settings/users')} sx={{ textTransform: 'lowercase' }}>users</Button>
+            <Button color={currentSelection() === 'dashboard' ? 'primary' : 'inherit'} startIcon={<DashboardIcon />} onClick={() => navigate('/dashboard')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>dashboard</Button>
+            <Button color={currentSelection() === 'map' ? 'primary' : 'inherit'} startIcon={<Badge color="error" variant="dot" overlap="circular" invisible={socket !== false}><MapIcon /></Badge>} onClick={() => handleSelection('map')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>tracking</Button>
+            {!disableReports && (<Button color={currentSelection() === 'reports' ? 'primary' : 'inherit'} startIcon={<DescriptionIcon />} onClick={() => handleSelection('reports')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>{t('reportTitle')}</Button>)}
+            <Button color={location.pathname.startsWith('/geofences') ? 'primary' : 'inherit'} startIcon={<PlaceIcon />} onClick={() => navigate('/geofences')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>geofences</Button>
+            <Button color={location.pathname.startsWith('/settings/devices') ? 'primary' : 'inherit'} startIcon={<DeviceHubIcon />} onClick={() => navigate('/settings/devices')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>units</Button>
+            <Button color={location.pathname.startsWith('/settings/users') ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={() => navigate('/settings/users')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>users</Button>
           </Box>
         )}
         {/* Spacer to push account/menu to far right */}
@@ -127,15 +127,15 @@ const TopHeader = () => {
             <IconButton color="inherit" onClick={() => setDrawerOpen(true)} sx={{ ml: 1 }}><MenuIcon /></IconButton>
           )}
           {readonly ? (
-            <Button color="inherit" startIcon={<ExitToAppIcon />} onClick={() => handleSelection('logout')} sx={{ textTransform: 'lowercase' }}>{t('loginLogout')}</Button>
+            <Button color="inherit" startIcon={<ExitToAppIcon />} onClick={() => handleSelection('logout')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>{t('loginLogout')}</Button>
           ) : (
             <>
               {!isMobile && (
-                <IconButton color={currentSelection() === 'settings' ? 'primary' : 'inherit'} onClick={() => handleSelection('settings')} sx={{ ml: 1 }}>
+                <IconButton color={currentSelection() === 'settings' ? 'primary' : 'inherit'} onClick={() => handleSelection('settings')} sx={{ ml: 1, color: (theme) => theme.palette.text.primary }}>
                   <SettingsIcon />
                 </IconButton>
               )}
-              <Button color={currentSelection() === 'account' ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={(event) => handleSelection('account', event)} sx={{ textTransform: 'lowercase' }}>
+              <Button color={currentSelection() === 'account' ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={(event) => handleSelection('account', event)} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>
                 {user?.name || user?.email || t('settingsUser')}
               </Button>
             </>
@@ -151,45 +151,45 @@ const TopHeader = () => {
             <ListItem disablePadding>
               <ListItemButton onClick={() => { setDrawerOpen(false); navigate('/dashboard'); }}>
                 <ListItemIcon><DashboardIcon /></ListItemIcon>
-                <ListItemText primary="Dashboard" />
+                <ListItemText primary={<Typography sx={{ color: (theme) => theme.palette.text.primary }}>Dashboard</Typography>} />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton onClick={() => { setDrawerOpen(false); handleSelection('map'); }}>
                 <ListItemIcon><MapIcon /></ListItemIcon>
-                <ListItemText primary="Tracking" />
+                <ListItemText primary={<Typography sx={{ color: (theme) => theme.palette.text.primary }}>Tracking</Typography>} />
               </ListItemButton>
             </ListItem>
             {!disableReports && (
               <ListItem disablePadding>
                 <ListItemButton onClick={() => { setDrawerOpen(false); handleSelection('reports'); }}>
                   <ListItemIcon><DescriptionIcon /></ListItemIcon>
-                  <ListItemText primary={t('reportTitle')} />
+                  <ListItemText primary={<Typography sx={{ color: (theme) => theme.palette.text.primary }}>{t('reportTitle')}</Typography>} />
                 </ListItemButton>
               </ListItem>
             )}
             <ListItem disablePadding>
               <ListItemButton onClick={() => { setDrawerOpen(false); navigate('/geofences'); }}>
                 <ListItemIcon><PlaceIcon /></ListItemIcon>
-                <ListItemText primary="Geofences" />
+                <ListItemText primary={<Typography sx={{ color: (theme) => theme.palette.text.primary }}>Geofences</Typography>} />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton onClick={() => { setDrawerOpen(false); navigate('/settings/devices'); }}>
                 <ListItemIcon><DeviceHubIcon /></ListItemIcon>
-                <ListItemText primary="Units" />
+                <ListItemText primary={<Typography sx={{ color: (theme) => theme.palette.text.primary }}>Units</Typography>} />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton onClick={() => { setDrawerOpen(false); navigate('/settings/users'); }}>
                 <ListItemIcon><PersonIcon /></ListItemIcon>
-                <ListItemText primary="Users" />
+                <ListItemText primary={<Typography sx={{ color: (theme) => theme.palette.text.primary }}>Users</Typography>} />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
               <ListItemButton onClick={() => { setDrawerOpen(false); handleSelection('settings'); }}>
                 <ListItemIcon><SettingsIcon /></ListItemIcon>
-                <ListItemText primary={t('settingsTitle')} />
+                <ListItemText primary={<Typography sx={{ color: (theme) => theme.palette.text.primary }}>{t('settingsTitle')}</Typography>} />
               </ListItemButton>
             </ListItem>
           </List>
@@ -197,7 +197,7 @@ const TopHeader = () => {
       </Drawer>
     )}
     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-      <MenuItem onClick={handleAccount}><Typography color="textPrimary">{t('settingsUser')}</Typography></MenuItem>
+      <MenuItem onClick={handleAccount}><Typography sx={{ color: (theme) => theme.palette.text.primary }}>{t('settingsUser')}</Typography></MenuItem>
       <MenuItem onClick={handleLogout}><Typography color="error">{t('loginLogout')}</Typography></MenuItem>
     </Menu>
   </AppBar>
