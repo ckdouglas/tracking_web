@@ -17,7 +17,6 @@ import MapOverlay from '../map/overlay/MapOverlay';
 import MapGeocoder from '../map/geocoder/MapGeocoder';
 import MapScale from '../map/MapScale';
 import MapNotification from '../map/notification/MapNotification';
-import useFeatures from '../common/util/useFeatures';
 
 const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
   const theme = useTheme();
@@ -27,7 +26,7 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
 
   const eventsAvailable = useSelector((state) => !!state.events.items.length);
 
-  const features = useFeatures();
+  const features = { disableEvents: false };
 
   const onMarkerClick = useCallback((_, deviceId) => {
     dispatch(devicesActions.selectId(deviceId));

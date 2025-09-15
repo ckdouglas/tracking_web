@@ -32,6 +32,9 @@ const useStyles = makeStyles()((theme, { miniVariant }) => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
+    marginTop: '72px', // Increased to match header height
+    height: 'calc(100vh - 72px)', // Ensure sidebar fills remaining space
+    overflowY: 'auto', // Enable vertical scrolling
     '@media print': {
       display: 'none',
     },
@@ -53,7 +56,7 @@ const useStyles = makeStyles()((theme, { miniVariant }) => ({
     alignItems: 'stretch',
     display: 'flex',
     flexDirection: 'column',
-    overflowY: 'auto',
+    // Removed overflowY: 'auto' to prevent double scroll
   },
 }));
 
@@ -101,9 +104,12 @@ const PageLayout = ({ menu, breadcrumbs, children }) => {
           <Toolbar>
             {!miniVariant && (
               <>
-                <IconButton color="inherit" edge="start" sx={{ mr: 2 }} onClick={() => navigate('/')}>
-                  <BackIcon />
-                </IconButton>
+                {/* Remove BackIcon for reports and settings pages */}
+                {!(breadcrumbs[0] && (breadcrumbs[0].toLowerCase().includes('report') || breadcrumbs[0].toLowerCase().includes('setting'))) && (
+                  <IconButton color="inherit" edge="start" sx={{ mr: 2 }} onClick={() => navigate('/')}> 
+                    <BackIcon />
+                  </IconButton>
+                )}
                 <PageTitle breadcrumbs={breadcrumbs} />
               </>
             )}

@@ -49,7 +49,7 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
     alignItems: 'flex-start',
   },
   mediaButton: {
-    color: theme.palette.primary.contrastText,
+    color: (theme) => theme.palette.mode === 'dark' ? '#fff' : theme.palette.primary.contrastText,
     mixBlendMode: 'difference',
   },
   header: {
@@ -180,18 +180,24 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
           >
             <Card elevation={3} className={classes.card}>
               {deviceImage ? (
-                <CardMedia
-                  className={`${classes.media} draggable-header`}
-                  image={`/api/media/${device.uniqueId}/${deviceImage}`}
-                >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }} className={classes.header + ' draggable-header'}>
+                  <img
+                    src={`/api/media/${device.uniqueId}/${deviceImage}`}
+                    alt="device icon"
+                    style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 6, marginRight: 12 }}
+                  />
+                  <Typography variant="body2" color="textSecondary">
+                    {device.name}
+                  </Typography>
                   <IconButton
                     size="small"
                     onClick={onClose}
                     onTouchStart={onClose}
+                    sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#fff' : theme.palette.primary.contrastText, marginLeft: 'auto' }}
                   >
                     <CloseIcon fontSize="small" className={classes.mediaButton} />
                   </IconButton>
-                </CardMedia>
+                </div>
               ) : (
                 <div className={`${classes.header} draggable-header`}>
                   <Typography variant="body2" color="textSecondary">

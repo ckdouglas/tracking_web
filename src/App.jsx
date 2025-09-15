@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import BottomMenu from './common/components/BottomMenu';
+import TopHeader from './common/components/TopHeader';
 import SocketController from './SocketController';
 import CachingController from './CachingController';
 import { useCatch, useEffectAsync } from './reactHelper';
@@ -77,14 +77,13 @@ const App = () => {
       <SocketController />
       <CachingController />
       <UpdateController />
+      {/* Top navigation header always visible */}
+      <div className={classes.menu}>
+        <TopHeader />
+      </div>
       <div className={classes.page}>
         <Outlet />
       </div>
-      {!desktop && (
-        <div className={classes.menu}>
-          <BottomMenu />
-        </div>
-      )}
     </>
   );
 };

@@ -1,0 +1,49 @@
+name: Build and Push Docker Image to GHCR
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-and-push:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # needed to push to ghcr.io ....
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Authenticate with GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository }}/motorsiot-admin
+          docker build -t $IMAGE_NAME:latest .
+          docker push $IMAGE_NAME:latest
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            VERSION_TAG=$(node -p "require('./package.json').version")
+            docker tag $IMAGE_NAME:latest $IMAGE_NAME:$VERSION_TAG
+            docker push $IMAGE_NAME:$VERSION_TAG
+          fi

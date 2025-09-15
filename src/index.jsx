@@ -12,7 +12,19 @@ import ServerProvider from './ServerProvider';
 import ErrorBoundary from './ErrorBoundary';
 import AppThemeProvider from './AppThemeProvider';
 
+
 preloadImages();
+
+// Rehydrate user session from localStorage
+import { sessionActions } from './store/session';
+const userSession = localStorage.getItem('user');
+if (userSession) {
+  try {
+    store.dispatch(sessionActions.updateUser(JSON.parse(userSession)));
+  } catch (e) {
+    localStorage.removeItem('user');
+  }
+}
 
 const root = createRoot(document.getElementById('root'));
 root.render(
