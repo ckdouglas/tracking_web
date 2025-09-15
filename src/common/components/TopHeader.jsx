@@ -111,12 +111,12 @@ const TopHeader = () => {
         {/* Navigation buttons (desktop only) */}
         {!isMobile && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button color={currentSelection() === 'dashboard' ? 'primary' : 'inherit'} startIcon={<DashboardIcon />} onClick={() => navigate('/dashboard')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>dashboard</Button>
-            <Button color={currentSelection() === 'map' ? 'primary' : 'inherit'} startIcon={<Badge color="error" variant="dot" overlap="circular" invisible={socket !== false}><MapIcon /></Badge>} onClick={() => handleSelection('map')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>tracking</Button>
-            {!disableReports && (<Button color={currentSelection() === 'reports' ? 'primary' : 'inherit'} startIcon={<DescriptionIcon />} onClick={() => handleSelection('reports')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>{t('reportTitle')}</Button>)}
-            <Button color={location.pathname.startsWith('/geofences') ? 'primary' : 'inherit'} startIcon={<PlaceIcon />} onClick={() => navigate('/geofences')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>geofences</Button>
-            <Button color={location.pathname.startsWith('/settings/devices') ? 'primary' : 'inherit'} startIcon={<DeviceHubIcon />} onClick={() => navigate('/settings/devices')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>units</Button>
-            <Button color={location.pathname.startsWith('/settings/users') ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={() => navigate('/settings/users')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>users</Button>
+            <Button color={currentSelection() === 'dashboard' ? 'primary' : 'inherit'} startIcon={<DashboardIcon />} onClick={() => navigate('/dashboard')} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>dashboard</Button>
+            <Button color={currentSelection() === 'map' ? 'primary' : 'inherit'} startIcon={<Badge color="error" variant="dot" overlap="circular" invisible={socket !== false}><MapIcon /></Badge>} onClick={() => handleSelection('map')} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>tracking</Button>
+            {!disableReports && (<Button color={currentSelection() === 'reports' ? 'primary' : 'inherit'} startIcon={<DescriptionIcon />} onClick={() => handleSelection('reports')} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>{t('reportTitle')}</Button>)}
+            <Button color={location.pathname.startsWith('/geofences') ? 'primary' : 'inherit'} startIcon={<PlaceIcon />} onClick={() => navigate('/geofences')} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>geofences</Button>
+            <Button color={location.pathname.startsWith('/settings/devices') ? 'primary' : 'inherit'} startIcon={<DeviceHubIcon />} onClick={() => navigate('/settings/devices')} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>units</Button>
+            <Button color={location.pathname.startsWith('/settings/users') ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={() => navigate('/settings/users')} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>users</Button>
           </Box>
         )}
         {/* Spacer to push account/menu to far right */}
@@ -127,7 +127,7 @@ const TopHeader = () => {
             <IconButton color="inherit" onClick={() => setDrawerOpen(true)} sx={{ ml: 1 }}><MenuIcon /></IconButton>
           )}
           {readonly ? (
-            <Button color="inherit" startIcon={<ExitToAppIcon />} onClick={() => handleSelection('logout')} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>{t('loginLogout')}</Button>
+            <Button color="inherit" startIcon={<ExitToAppIcon />} onClick={() => handleSelection('logout')} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>{t('loginLogout')}</Button>
           ) : (
             <>
               {!isMobile && (
@@ -135,7 +135,7 @@ const TopHeader = () => {
                   <SettingsIcon />
                 </IconButton>
               )}
-              <Button color={currentSelection() === 'account' ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={(event) => handleSelection('account', event)} sx={{ textTransform: 'lowercase', color: (theme) => theme.palette.text.primary }}>
+              <Button color={currentSelection() === 'account' ? 'primary' : 'inherit'} startIcon={<PersonIcon />} onClick={(event) => handleSelection('account', event)} sx={{ textTransform: 'capitalize', color: (theme) => theme.palette.text.primary }}>
                 {user?.name || user?.email || t('settingsUser')}
               </Button>
             </>
