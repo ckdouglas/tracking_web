@@ -21,6 +21,9 @@ import { useTranslation } from '../../common/components/LocalizationProvider';
 import {
   useAdministrator, useManager, useRestriction,
 } from '../../common/util/permissions';
+import {
+  useIsSuperAdmin, useCanManageTenant, useIsTenantAdmin,
+} from '../../common/util/tenantContext';
 import useFeatures from '../../common/util/useFeatures';
 import MenuItem from '../../common/components/MenuItem';
 
@@ -31,6 +34,9 @@ const SettingsMenu = () => {
   const readonly = useRestriction('readonly');
   const admin = useAdministrator();
   const manager = useManager();
+  const isSuperAdmin = useIsSuperAdmin();
+  const canManageTenant = useCanManageTenant();
+  const isTenantAdmin = useIsTenantAdmin();
   const userId = useSelector((state) => state.session.user.id);
   const supportLink = useSelector((state) => state.session.server.attributes.support);
   const billingLink = useSelector((state) => state.session.user.attributes.billingLink);
@@ -160,6 +166,35 @@ const SettingsMenu = () => {
               link="/settings/users"
               icon={<PeopleIcon />}
               selected={location.pathname.startsWith('/settings/user') && location.pathname !== `/settings/user/${userId}`}
+            />
+            {canManageTenant && (
+              <MenuItem
+                title="Roles"
+                link="/settings/roles"
+                icon={<PeopleIcon />}
+                selected={location.pathname === '/settings/roles'}
+              />
+            )}
+            {isTenantAdmin && (
+              <MenuItem
+                title="Tenant"
+                link="/settings/tenant"
+                icon={<StorageIcon />}
+                selected={location.pathname === '/settings/tenant'}
+              />
+            )}
+          </List>
+        </>
+      )}
+      {isSuperAdmin && (
+        <>
+          <Divider />
+          <List>
+            <MenuItem
+              title="All Tenants"
+              link="/settings/tenants"
+              icon={<StorageIcon />}
+              selected={location.pathname === '/settings/tenants'}
             />
           </List>
         </>

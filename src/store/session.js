@@ -5,6 +5,8 @@ const { reducer, actions } = createSlice({
   initialState: {
     server: null,
     user: null,
+    tenant: null,
+    userRoles: [],
     socket: null,
     includeLogs: false,
     logs: [],
@@ -17,6 +19,12 @@ const { reducer, actions } = createSlice({
     },
     updateUser(state, action) {
       state.user = action.payload;
+    },
+    updateTenant(state, action) {
+      state.tenant = action.payload;
+    },
+    updateUserRoles(state, action) {
+      state.userRoles = action.payload;
     },
     updateSocket(state, action) {
       state.socket = action.payload;

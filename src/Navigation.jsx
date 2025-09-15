@@ -46,6 +46,8 @@ import PreferencesPage from './settings/PreferencesPage';
 import AccumulatorsPage from './settings/AccumulatorsPage';
 import CommandDevicePage from './settings/CommandDevicePage';
 import CommandGroupPage from './settings/CommandGroupPage';
+import TenantPage from './settings/TenantPage';
+import RolesPage from './settings/RolesPage';
 import App from './App';
 import ChangeServerPage from './login/ChangeServerPage';
 import DevicesPage from './settings/DevicesPage';
@@ -156,7 +158,9 @@ const Navigation = () => {
           <Route path="notification/:id" element={<NotificationPage />} />
           <Route path="notification" element={<NotificationPage />} />
           <Route path="preferences" element={<PreferencesPage />} />
+          <Route path="roles" element={<RolesPage />} />
           <Route path="server" element={<ServerPage />} />
+          <Route path="tenant" element={<TenantPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="user/:id/connections" element={<UserConnectionsPage />} />
           <Route path="user/:id" element={<UserPage />} />
