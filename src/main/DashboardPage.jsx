@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Box, Grid, Paper, Typography, CircularProgress, Card, CardContent } from '@mui/material';
+import { Box, Grid, Paper, Typography, CircularProgress, Card, CardContent, ToggleButtonGroup, ToggleButton, TextField, Stack, Button } from '@mui/material';
 import TopHeader from '../common/components/TopHeader';
 import PieChart from '../charts/PieChart';
 import BarChart from '../charts/BarChart';
@@ -19,6 +19,9 @@ const DashboardPage = () => {
   const [devices, setDevices] = useState([]);
   const [positions, setPositions] = useState([]);
   const [error, setError] = useState(null);
+  const [range, setRange] = useState('week'); // today | yesterday | week | month | custom
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const user = useSelector((state) => state.session.user);
   const navigate = useNavigate();
   // Redirect to login if not logged in
@@ -35,11 +38,32 @@ const DashboardPage = () => {
       setError(null);
       try {
         const now = new Date();
-        const from = new Date(now.getTime() - 24*60*60*1000).toISOString(); // last 24h
-        const to = now.toISOString();
+        let fromIso;
+        let toIso;
+        const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const endOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+        if (range === 'custom' && customFrom && customTo) {
+          fromIso = new Date(customFrom).toISOString();
+          toIso = new Date(customTo).toISOString();
+        } else if (range === 'today') {
+          fromIso = startOfDay(now).toISOString();
+          toIso = endOfDay(now).toISOString();
+        } else if (range === 'yesterday') {
+          const y = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          fromIso = startOfDay(y).toISOString();
+          toIso = endOfDay(y).toISOString();
+        } else if (range === 'month') {
+          const first = new Date(now.getFullYear(), now.getMonth(), 1);
+          fromIso = startOfDay(first).toISOString();
+          toIso = endOfDay(now).toISOString();
+        } else { // week (default)
+          const w = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          fromIso = startOfDay(w).toISOString();
+          toIso = endOfDay(now).toISOString();
+        }
         const [devicesData, positionsData] = await Promise.all([
           fetchTraccar('devices'),
-          fetchTraccar('positions'),
+          fetchTraccar(`positions?from=${fromIso}&to=${toIso}`),
         ]);
         setDevices(devicesData);
         setPositions(positionsData);
@@ -49,7 +73,7 @@ const DashboardPage = () => {
       setLoading(false);
     };
     loadData();
-  }, []);
+  }, [range, customFrom, customTo]);
 
   // Example analytics calculations
   const onlineDevices = devices.filter(d => d.status === 'online').length;
@@ -105,6 +129,49 @@ const DashboardPage = () => {
     <>
       <TopHeader />
       <Box sx={{ p: 2 }}>
+        {/* Filter Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, gap: 2, flexWrap: 'wrap' }}>
+          <ToggleButtonGroup
+            value={range}
+            exclusive
+            onChange={(e, val) => { if (val) setRange(val); }}
+            size="small"
+          >
+            <ToggleButton value="today">Today</ToggleButton>
+            <ToggleButton value="yesterday">Yesterday</ToggleButton>
+            <ToggleButton value="week">Week</ToggleButton>
+            <ToggleButton value="month">Month</ToggleButton>
+            <ToggleButton value="custom">Custom</ToggleButton>
+          </ToggleButtonGroup>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
+            <TextField
+              type="date"
+              label="From"
+              size="small"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              disabled={range !== 'custom'}
+            />
+            <TextField
+              type="date"
+              label="To"
+              size="small"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              disabled={range !== 'custom'}
+            />
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => { /* trigger reload by toggling a state when custom */ setCustomTo((v) => v); }}
+              disabled={range === 'custom' && (!customFrom || !customTo)}
+            >
+              Apply
+            </Button>
+          </Stack>
+        </Box>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
             <CircularProgress />
@@ -112,52 +179,91 @@ const DashboardPage = () => {
         ) : error ? (
           <Typography color="error">{error}</Typography>
         ) : (
+            
           <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Connection State</Typography>
-                <PieChart data={connectionStateData} />
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Health Check Status</Typography>
-                <PieChart data={healthCheckData} />
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Top Units by Mileage</Typography>
-                <BarChart data={topMileage} />
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={12}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle1">Mileage Over Time</Typography>
-                <LineChart data={mileageOverTime} />
-              </Paper>
-            </Grid>
-            {/* Remove the legend (right side color bars, labels, and values) from the Motion State card */}
-            <Grid item xs={12} md={8}>
-              <Card sx={{ height: '100%', boxShadow: 3, borderRadius: 2, p: 2 }}>
-                <CardContent sx={{ p: 0 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, flexGrow: 1 }}>Motion state</Typography>
-                    <Typography variant="caption" sx={{ color: '#43a047', fontWeight: 500, mr: 2 }}>ONLINE DATA</Typography>
-                    <Box component="span" sx={{ ml: 1 }}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>ⓘ</Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                    <Box sx={{ minWidth: 180 }}>
-                      <PieChart data={motionStateData} centerLabel={motionStateData.reduce((sum, d) => sum + d.value, 0)} />
-                    </Box>
-                    {/* Legend removed as requested */}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                {[
+                  {
+                    title: "Health check status",
+                    content: <PieChart data={healthCheckData} />
+                  },
+                  {
+                    title: "Latest notifications",
+                    content: <Typography variant="body2" color="textSecondary">No data</Typography>
+                  },
+                  {
+                    title: "Connection state",
+                    content: <PieChart data={connectionStateData} />
+                  },
+                  {
+                    title: "Motion state",
+                    content: (
+                      <PieChart
+                        data={motionStateData}
+                        centerLabel={motionStateData.reduce((sum, d) => sum + d.value, 0)}
+                        showLegend
+                      />
+                    )
+                  },
+                  {
+                    title: "Geofences with units",
+                    content: <Typography variant="body2" color="textSecondary">No data</Typography>
+                  },
+                  {
+                    title: "Mileage",
+                    content: <LineChart data={mileageOverTime} />
+                  },
+                  {
+                    title: "Top units by fuel consumption",
+                    content: topMileage.length > 0 ? (
+                      <BarChart data={topMileage} title="Fuel" color="#1976d2" />
+                    ) : (
+                      <Typography variant="body2" color="textSecondary">No data</Typography>
+                    )
+                  },
+                  {
+                    title: "Consumed by FLS",
+                    content: <Typography variant="body2" color="textSecondary">No data</Typography>
+                  },
+                  {
+                    title: "Speedings",
+                    content: <Typography variant="body2" color="textSecondary">No data</Typography>
+                  },
+                  {
+                    title: "Top units by mileage",
+                    content: topMileage.length > 0 ? (
+                      <BarChart data={topMileage} title="Mileage" color="#1976d2" />
+                    ) : (
+                      <Typography variant="body2" color="textSecondary">No data</Typography>
+                    )
+                  }
+                ].map((card, i) => (
+                  <Grid key={i} item xs={12} sm={6} md={4} display="flex">
+                    <Paper
+                      sx={{
+                        p: 2,
+                        flexGrow: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        height: 360
+                      }}
+                    >
+                      <Typography variant="h6" gutterBottom>
+                        {card.title}
+                      </Typography>
+                      <Box
+                        sx={{
+                          flex: 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}
+                      >
+                        {card.content}
+                      </Box>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
         )}
       </Box>
     </>
@@ -165,3 +271,5 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+

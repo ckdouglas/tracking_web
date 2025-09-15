@@ -97,29 +97,31 @@ const DeviceRow = ({ devices, index, style }) => {
   const [tabIndex, setTabIndex] = useState(0); // 0: Info, 1: Icon
   const [selectedIcon, setSelectedIcon] = useState('');
 
-
   React.useEffect(() => {
     let isMounted = true;
     const currentItem = devices[index];
     async function fetchIcon() {
-      if (currentItem && currentItem.icon) {
-        const url = currentItem.icon.startsWith('http') ? currentItem.icon : `/api/media/${currentItem.uniqueId}/${currentItem.icon}`;
+      if (currentItem && currentItem.attributes && currentItem.attributes.deviceImage) {
+        const url = `/api/media/${currentItem.uniqueId}/${currentItem.attributes.deviceImage}`;
         try {
           const res = await fetch(url, { method: 'HEAD' });
           if (isMounted && res.ok) {
             setDeviceIconUrl(url);
+            return;
           }
         } catch (error) {
-          console.error('Error fetching device icon:', error);
+          console.error('Error fetching device image:', error);
         }
       }
+      // fallback to default icon
+      setDeviceIconUrl(unitIcons.default);
     }
     fetchIcon();
 
     return () => {
       isMounted = false;
     };
-  }, [devices, index]);
+  }, [devices, index, devices[index]?.attributes?.deviceImage]);
 
   const dispatch = useDispatch();
   const t = useTranslation();
@@ -143,14 +145,15 @@ const DeviceRow = ({ devices, index, style }) => {
           width: '100%',
           padding: '6px 12px',
           margin: 0,
-          borderRadius: 2,
+          borderRadius: 0,
           transition: 'box-shadow 0.2s',
           boxShadow: selectedDeviceId === item.id ? '0 2px 8px rgba(25, 118, 210, 0.08)' : 'none',
-          background: (theme) => selectedDeviceId === item.id ? theme.palette.action.selected : theme.palette.background.paper,
+          background: 'none',
           color: (theme) => theme.palette.text.primary,
+          borderBottom: '1px solid #888',
           '&:hover': {
             boxShadow: '0 2px 12px rgba(25, 118, 210, 0.12)',
-            background: (theme) => theme.palette.action.hover,
+            background: 'none',
           },
         }}
       >
@@ -229,7 +232,24 @@ const DeviceRow = ({ devices, index, style }) => {
       {/* Device properties dialog (spanner icon) with tabs and icon selection */}
       {openSpanner && (
         <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', bgcolor: 'rgba(0,0,0,0.3)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setOpenSpanner(false)}>
-          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, boxShadow: 6, minWidth: 340, maxWidth: 420, p: 3 }} onClick={e => e.stopPropagation()}>
+          <Box sx={{ position: 'relative', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 6, minWidth: 340, maxWidth: 420, p: 3 }} onClick={e => e.stopPropagation()}>
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenSpanner(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 10,
+                color: (theme) => theme.palette.mode === 'dark' ? '#fff' : '#333',
+                background: 'rgba(0,0,0,0.08)',
+                '&:hover': { background: 'rgba(0,0,0,0.18)' },
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6L16 16M16 6L6 16" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+              </svg>
+            </IconButton>
             <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)} variant="fullWidth" sx={{ mb: 2 }}>
               <Tab label={t('Device Info') || 'Device Info'} />
               <Tab label={t('Select Icon') || 'Select Icon'} />
@@ -238,7 +258,7 @@ const DeviceRow = ({ devices, index, style }) => {
               <>
                 <Typography variant="h6" sx={{ mb: 2 }}>{item[devicePrimary]}</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <img src={deviceIconUrl || unitIcons.default} alt="device icon" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 6 }} />
+                  <img src={deviceIconUrl || unitIcons.default} alt="device icon" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 6 }} />
                   <Typography variant="body2">ID: {item.id}</Typography>
                 </Box>
                 <Box sx={{ mt: 2 }}>
@@ -289,7 +309,17 @@ const DeviceRow = ({ devices, index, style }) => {
               </>
             )}
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button variant="outlined" onClick={() => setOpenSpanner(false)}>{t('Close') || 'Close'}</Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                sx={{
+                  fontWeight: 500,
+                  minWidth: 90,
+                  color: (theme) => theme.palette.mode === 'dark' ? '#fff' : undefined,
+                  borderColor: (theme) => theme.palette.mode === 'dark' ? '#fff' : undefined,
+                }}
+                onClick={() => setOpenSpanner(false)}
+              >{t('Close') || 'Close'}</Button>
             </Box>
           </Box>
         </Box>

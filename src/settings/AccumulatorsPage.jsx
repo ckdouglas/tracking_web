@@ -56,7 +56,7 @@ const AccumulatorsPage = () => {
       {item && (
         <Container maxWidth="xs" className={classes.container}>
           <Accordion defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <AccordionSummary expandIcon={< ExpandMoreIcon />}>
               <Typography variant="subtitle1">
                 {t('sharedRequired')}
               </Typography>
