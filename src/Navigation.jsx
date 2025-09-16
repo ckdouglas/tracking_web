@@ -47,6 +47,9 @@ import CommandDevicePage from './settings/CommandDevicePage';
 import CommandGroupPage from './settings/CommandGroupPage';
 import TenantPage from './settings/TenantPage';
 import RolesPage from './settings/RolesPage';
+import TenantsPage from './tenants/TenantsPage';
+import RolesManagementPage from './roles/RolesPage';
+import UserRolesPage from './users/UserRolesPage';
 import App from './App';
 import DashboardPage from './main/DashboardPage';
 import ChangeServerPage from './login/ChangeServerPage';
@@ -187,6 +190,10 @@ const Navigation = () => {
           <Route path="audit" element={<AuditPage />} />
           <Route path="logs" element={<LogsPage />} />
         </Route>
+
+        <Route path="tenants" element={<TenantsPage />} />
+        <Route path="roles" element={<RolesManagementPage />} />
+        <Route path="user-roles" element={<UserRolesPage />} />
       </Route>
     </Routes>
   );

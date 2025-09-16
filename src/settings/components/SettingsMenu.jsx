@@ -24,6 +24,9 @@ import {
 import {
   useIsSuperAdmin, useCanManageTenant, useIsTenantAdmin,
 } from '../../common/util/tenantContext';
+import BusinessIcon from '@mui/icons-material/Business';
+import SecurityIcon from '@mui/icons-material/Security';
+import GroupIcon from '@mui/icons-material/Group';
 import useFeatures from '../../common/util/useFeatures';
 import MenuItem from '../../common/components/MenuItem';
 
@@ -170,9 +173,17 @@ const SettingsMenu = () => {
             {canManageTenant && (
               <MenuItem
                 title="Roles"
-                link="/settings/roles"
-                icon={<PeopleIcon />}
-                selected={location.pathname === '/settings/roles'}
+                link="/roles"
+                icon={<SecurityIcon />}
+                selected={location.pathname === '/roles'}
+              />
+            )}
+            {canManageTenant && (
+              <MenuItem
+                title="User Roles"
+                link="/user-roles"
+                icon={<GroupIcon />}
+                selected={location.pathname === '/user-roles'}
               />
             )}
             {isTenantAdmin && (
@@ -192,9 +203,9 @@ const SettingsMenu = () => {
           <List>
             <MenuItem
               title="All Tenants"
-              link="/settings/tenants"
-              icon={<StorageIcon />}
-              selected={location.pathname === '/settings/tenants'}
+              link="/tenants"
+              icon={<BusinessIcon />}
+              selected={location.pathname === '/tenants'}
             />
           </List>
         </>
